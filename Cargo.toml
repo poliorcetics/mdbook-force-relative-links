@@ -1,6 +1,14 @@
 [package]
 name = "mdbook-force-relative-links"
+authors = ["Alexis (Poliorcetics) Bourget <ab_contribs@poliorcetiq.eu>"]
 version = "0.1.0"
+
+description = "An `mdbook` pre-processor to transform all local links to relative ones"
+documentation = "https://github.com/poliorcetics/mdbook-force-relative-links/blob/main/README.md#usage"
 edition = "2021"
+keywords = ["book", "theme", "rustbook", "markdown"]
+license = "MPL-2.0"
+readme = "README.md"
+repository = "https://github.com/poliorcetics/mdbook-force-relative-links"
 
 [dependencies]
