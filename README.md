@@ -18,6 +18,7 @@ Add the following to your `book.toml`:
 
 ```toml
 [prepocessor.force-relative-links]
+after = ["links"] # Required to resolve links that comes from `{{#include}}` directives
 ```
 
 And `mdbook-force-relative-links` needs to be in `PATH` when `mdbook` is called.
