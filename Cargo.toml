@@ -1,7 +1,7 @@
 [package]
 name = "mdbook-force-relative-links"
 authors = ["Alexis (Poliorcetics) Bourget <ab_contribs@poliorcetiq.eu>"]
-version = "0.1.1"
+version = "0.1.2"
 
 description = "An `mdbook` pre-processor to transform all local links to relative ones"
 documentation = "https://github.com/poliorcetics/mdbook-force-relative-links/blob/main/README.md#usage"
