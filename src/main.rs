@@ -109,36 +109,16 @@ fn handle_item(item: &mut BookItem) {
     chapter.content = buf;
 }
 
-fn handle_link<'a>(event: Event<'a>, prefix: &str) -> Event<'a> {
-    let Event::Start(Tag::Link {
-        link_type,
-        dest_url,
-        title,
-        id,
-    }) = event
-    else {
-        return event;
+fn handle_link<'a>(mut event: Event<'a>, prefix: &str) -> Event<'a> {
+    if let Event::Start(Tag::Link { dest_url, .. } | Tag::Image { dest_url, .. }) = &mut event {
+        // Ignore any non-absolute (and non-local) link
+        if dest_url.starts_with('/') {
+            *dest_url = format!("{prefix}{}", dest_url.trim_start_matches('/')).into();
+            // eprintln!("preprocessor: {NAME}: fixed '{dest_url}' to '{fixed_dest_url}'");
+        }
     };
 
-    // Ignore any non-absolute (and non-local) link
-    if !dest_url.starts_with('/') {
-        return Event::Start(Tag::Link {
-            link_type,
-            dest_url,
-            title,
-            id,
-        });
-    }
-
-    let fixed_dest_url = format!("{prefix}{}", dest_url.trim_start_matches('/'));
-    // eprintln!("preprocessor: {NAME}: fixed '{dest_url}' to '{fixed_dest_url}'");
-
-    Event::Start(Tag::Link {
-        link_type,
-        dest_url: fixed_dest_url.into(),
-        title,
-        id,
-    })
+    event
 }
 
 #[cfg(test)]
@@ -183,7 +163,7 @@ mod test {
                     {
                         "Chapter": {
                             "name": "Chapter 2.1",
-                            "content": "# Chapter 2.1\n\n[link 0000](/chapter_1.md)\n\n[link 0001](/chapter_2/chapter_2.1.md)\n",
+                            "content": "# Chapter 2.1\n\n[link 0000](/chapter_1.md)\n\n[link 0001](/chapter_2/chapter_2.1.md)\n\n![image 0001](/images/image.png)\n",
                             "number": [
                                 2,
                                 1
@@ -268,7 +248,7 @@ mod test {
                     {
                         "Chapter": {
                             "name": "Chapter 2.1",
-                            "content": "# Chapter 2.1\n\n[link 0000](../chapter_1.md)\n\n[link 0001](../chapter_2/chapter_2.1.md)",
+                            "content": "# Chapter 2.1\n\n[link 0000](../chapter_1.md)\n\n[link 0001](../chapter_2/chapter_2.1.md)\n\n![image 0001](../images/image.png)",
                             "number": [
                                 2,
                                 1
