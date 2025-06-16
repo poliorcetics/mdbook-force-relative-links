@@ -25,12 +25,7 @@ let
 
   nativeBuildInputs = [ rustBuildToolchain ];
 
-  buildInputs =
-    with pkgs;
-    lib.optionals stdenv.isDarwin [
-      darwin.apple_sdk.frameworks.SystemConfiguration
-      darwin.apple_sdk.frameworks.CoreFoundation
-    ];
+  buildInputs = with pkgs; lib.optionals stdenv.isDarwin [ apple-sdk ];
 
   craneLib = (crane.mkLib pkgs).overrideToolchain rustBuildToolchain;
 
