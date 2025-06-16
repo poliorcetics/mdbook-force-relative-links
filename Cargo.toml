@@ -6,20 +6,18 @@ version = "0.1.2"
 description = "An `mdbook` pre-processor to transform all local links to relative ones"
 documentation = "https://github.com/poliorcetics/mdbook-force-relative-links/blob/main/README.md#usage"
 edition = "2021"
-exclude = [
-     "/.envrc",
-     "/.github/*",
-     "/flake.*",
-     "/nix/*",
-     "/test-books/*",
-]
+exclude = ["/.envrc", "/.github/*", "/flake.*", "/nix/*", "/test-books/*"]
 keywords = ["book", "theme", "rustbook", "markdown"]
 license = "MPL-2.0"
 readme = "README.md"
 repository = "https://github.com/poliorcetics/mdbook-force-relative-links"
 
 [dependencies]
-clap = { version = "4", default-features = false, features = ["help", "std", "usage"] }
+clap = { version = "4", default-features = false, features = [
+  "help",
+  "std",
+  "usage",
+] }
 mdbook = { version = "0.4", default-features = false }
 pulldown-cmark = { version = "0.10.0", default-features = false }
 pulldown-cmark-to-cmark = "14.0.1"

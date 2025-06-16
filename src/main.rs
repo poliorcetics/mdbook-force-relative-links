@@ -1,8 +1,8 @@
 use clap::{Arg, ArgMatches, Command};
+use mdbook::BookItem;
 use mdbook::book::Book;
 use mdbook::errors::Error;
 use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
-use mdbook::BookItem;
 use pulldown_cmark::{Event, Tag};
 use semver::{Version, VersionReq};
 

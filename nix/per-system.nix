@@ -3,12 +3,17 @@
   crane,
   nixpkgs,
   rust-overlay,
-  system,
+  self,
+  treefmt-nix,
+  ...
 }:
+system:
 let
   overlays = [ (import rust-overlay) ];
   pkgs = import nixpkgs { inherit system overlays; };
   rust = import ./rust.nix { inherit advisory-db crane pkgs; };
+
+  treefmtEval = import ./fmt.nix pkgs rust treefmt-nix;
 in
 {
   packages = rust.packages // {
@@ -16,26 +21,12 @@ in
   };
 
   checks = rust.checks // {
-    ## Nix ##
-
-    nix-fmt-checks = pkgs.stdenv.mkDerivation {
-      name = "nix-fmt-checks";
-      src = ./..;
-      dontBuild = true;
-      nativeBuildInputs = [ pkgs.nixfmt-rfc-style ];
-      doCheck = true;
-      checkPhase = ''
-        nixfmt --check .
-      '';
-      installPhase = ''
-        mkdir "$out"
-      '';
-    };
+    formatting = treefmtEval.config.build.check self;
   };
 
   devShells.default = pkgs.mkShell {
     packages = [ pkgs.nixfmt-rfc-style ] ++ rust.extras.devShellPackages;
   };
 
-  formatter = nixpkgs.legacyPackages.${system}.nixfmt-rfc-style;
+  formatter = treefmtEval.config.build.wrapper;
 }

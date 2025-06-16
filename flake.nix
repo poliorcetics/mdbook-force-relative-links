@@ -14,30 +14,17 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    {
-      nixpkgs,
-      flake-utils,
-      advisory-db,
-      crane,
-      rust-overlay,
-      ...
-    }:
+    inputs:
     let
-      perSystemOutputs = flake-utils.lib.eachDefaultSystem (
-        system:
-        import ./nix/per-system.nix {
-          inherit
-            advisory-db
-            crane
-            nixpkgs
-            rust-overlay
-            system
-            ;
-        }
-      );
+      perSystemOutputs = inputs.flake-utils.lib.eachDefaultSystem (import ./nix/per-system.nix inputs);
     in
     perSystemOutputs
     // {

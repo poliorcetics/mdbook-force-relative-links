@@ -68,10 +68,15 @@ in
   inherit packages;
 
   extras = {
-    devShellPackages = [
-      rustfmt
-      rustDevToolchain
-    ] ++ buildInputs ++ nativeBuildInputs;
+    inherit rustfmt;
+
+    devShellPackages =
+      [
+        rustfmt
+        rustDevToolchain
+      ]
+      ++ buildInputs
+      ++ nativeBuildInputs;
   };
 
   checks = packages // {
@@ -86,19 +91,6 @@ in
         cargoClippyExtraArgs = "--tests --workspace -- --deny warnings";
       }
     );
-
-    # Check formatting
-    mdbook-force-relative-links-fmt = pkgs.writeShellApplication {
-      name = "mdbook-force-relative-links-fmt-check";
-      runtimeInputs = [
-        rustfmt
-        rustBuildToolchain
-      ];
-      text = ''
-        cargo fmt --version
-        cargo fmt --check --verbose
-      '';
-    };
 
     mdbook-force-relative-links-nextest = craneLib.cargoNextest (
       commonArgs
