@@ -70,13 +70,12 @@ in
   extras = {
     inherit rustfmt;
 
-    devShellPackages =
-      [
-        rustfmt
-        rustDevToolchain
-      ]
-      ++ buildInputs
-      ++ nativeBuildInputs;
+    devShellPackages = [
+      rustfmt
+      rustDevToolchain
+    ]
+    ++ buildInputs
+    ++ nativeBuildInputs;
   };
 
   checks = packages // {
