@@ -1,9 +1,8 @@
 use clap::{Arg, ArgMatches, Command};
-use mdbook::BookItem;
-use mdbook::book::Book;
-use mdbook::errors::Error;
-use mdbook::preprocess::{CmdPreprocessor, Preprocessor, PreprocessorContext};
-use pulldown_cmark::{Event, Tag};
+use mdbook_preprocessor::book::{Book, BookItem};
+use mdbook_preprocessor::errors::Result;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext, parse_input};
+use pulldown_cmark::{Event, Parser, Tag};
 use semver::{Version, VersionReq};
 
 /// Name of this preprocessor.
@@ -32,18 +31,18 @@ fn main() {
     }
 }
 
-fn handle_preprocessing(pre: &dyn Preprocessor) -> Result<(), Error> {
-    let (ctx, book) = CmdPreprocessor::parse_input(std::io::stdin())?;
+fn handle_preprocessing(pre: &dyn Preprocessor) -> Result<()> {
+    let (ctx, book) = parse_input(std::io::stdin())?;
 
     let book_version = Version::parse(&ctx.mdbook_version)?;
-    let version_req = VersionReq::parse(mdbook::MDBOOK_VERSION)?;
+    let version_req = VersionReq::parse(mdbook_preprocessor::MDBOOK_VERSION)?;
 
     if !version_req.matches(&book_version) {
         eprintln!(
             "Warning: The {} plugin was built against version {} of mdbook, \
              but we're being called from version {}",
             pre.name(),
-            mdbook::MDBOOK_VERSION,
+            mdbook_preprocessor::MDBOOK_VERSION,
             ctx.mdbook_version
         );
     }
@@ -58,13 +57,11 @@ fn handle_supports(pre: &dyn Preprocessor, sub_args: &ArgMatches) -> ! {
     let renderer = sub_args
         .get_one::<String>("renderer")
         .expect("Required argument");
-    let supported = pre.supports_renderer(renderer);
 
-    // Signal whether the renderer is supported by exiting with 1 or 0.
-    if supported {
-        std::process::exit(0);
-    } else {
-        std::process::exit(1);
+    // supports_renderer returns Result<bool>; treat any error as "not supported".
+    match pre.supports_renderer(renderer) {
+        Ok(true) => std::process::exit(0),
+        _ => std::process::exit(1),
     }
 }
 
@@ -78,7 +75,7 @@ impl Preprocessor for ForceRelativeLinks {
         NAME
     }
 
-    fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book, Error> {
+    fn run(&self, _ctx: &PreprocessorContext, mut book: Book) -> Result<Book> {
         book.for_each_mut(handle_item);
         Ok(book)
     }
@@ -99,8 +96,7 @@ fn handle_item(item: &mut BookItem) {
     let parent_count = path.ancestors().count().saturating_sub(2);
     let prefix = "../".repeat(parent_count);
 
-    let events = mdbook::utils::new_cmark_parser(&chapter.content, false)
-        .map(|event| handle_link(event, &prefix));
+    let events = Parser::new(&chapter.content).map(|event| handle_link(event, &prefix));
 
     // Replace the chapter content with the fixed links.
     let mut buf = String::with_capacity(chapter.content.len());
@@ -134,7 +130,6 @@ mod test {
                     "book": {
                         "authors": ["AUTHOR"],
                         "language": "en",
-                        "multilingual": false,
                         "src": "src",
                         "title": "TITLE"
                     },
@@ -143,10 +138,10 @@ mod test {
                     }
                 },
                 "renderer": "html",
-                "mdbook_version": "0.4.21"
+                "mdbook_version": "0.5.0"
             },
             {
-                "sections": [
+                "items": [
                     {
                         "Chapter": {
                             "name": "Chapter 1",
@@ -206,8 +201,7 @@ mod test {
                            "parent_names": []
                         }
                     }
-                ],
-                "__non_exhaustive": null
+                ]
             }
         ]"##;
         let input_json = input_json.as_bytes();
@@ -219,7 +213,6 @@ mod test {
                     "book": {
                         "authors": ["AUTHOR"],
                         "language": "en",
-                        "multilingual": false,
                         "src": "src",
                         "title": "TITLE"
                     },
@@ -228,10 +221,10 @@ mod test {
                     }
                 },
                 "renderer": "html",
-                "mdbook_version": "0.4.21"
+                "mdbook_version": "0.5.0"
             },
             {
-                "sections": [
+                "items": [
                     {
                         "Chapter": {
                             "name": "Chapter 1",
@@ -291,19 +284,17 @@ mod test {
                            "parent_names": []
                         }
                     }
-                ],
-                "__non_exhaustive": null
+                ]
             }
         ]"##;
         let expected_json = expected_json.as_bytes();
 
-        let (ctx, book) = mdbook::preprocess::CmdPreprocessor::parse_input(input_json).unwrap();
+        let (ctx, book) = parse_input(input_json).unwrap();
 
         let result = ForceRelativeLinks.run(&ctx, book);
         assert!(result.is_ok());
 
-        let (_, expected_book) =
-            mdbook::preprocess::CmdPreprocessor::parse_input(expected_json).unwrap();
+        let (_, expected_book) = parse_input(expected_json).unwrap();
 
         // The preprocessor should have changed the links in to the book content.
         let actual_book = result.unwrap();

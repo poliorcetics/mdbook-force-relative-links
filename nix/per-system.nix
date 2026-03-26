@@ -25,7 +25,11 @@ in
   };
 
   devShells.default = pkgs.mkShell {
-    packages = [ pkgs.nixfmt-rfc-style ] ++ rust.extras.devShellPackages;
+    packages = [
+      pkgs.nixfmt-rfc-style
+      pkgs.mdbook
+    ]
+    ++ rust.extras.devShellPackages;
   };
 
   formatter = treefmtEval.config.build.wrapper;
