@@ -31,10 +31,13 @@ let
 
   # Filtering the source leads to a smaller footprint in the nix store and ensure we don't
   # use unexpected files during builds
-  src = pkgs.lib.cleanSourceWith {
-    src = craneLib.path ./..; # The original, unfiltered source
-    filter = path: type: (craneLib.filterCargoSources path type);
-  };
+  filteredSrc =
+    filter:
+    pkgs.lib.cleanSourceWith {
+      inherit filter;
+      src = craneLib.path ./..; # The original, unfiltered source
+    };
+  src = filteredSrc (path: type: (craneLib.filterCargoSources path type));
 
   commonArgs = {
     inherit buildInputs nativeBuildInputs src;
@@ -95,6 +98,12 @@ in
       commonArgs
       // {
         inherit cargoArtifacts;
+
+        nativeBuildInputs = nativeBuildInputs ++ [ pkgs.mdbook ];
+        src = filteredSrc (
+          path: type: (craneLib.filterCargoSources path type) || (pkgs.lib.hasInfix "/test-books/" path)
+        );
+
         CARGO_TERM_COLOR = "always";
         NEXTEST_FAILURE_OUTPUT = "final";
         NEXTEST_HIDE_PROGRESS_BAR = "1";
